@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PyFundamentos — Plataforma de Estudo Python</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+<style>
+/* ============================================================
+   DESIGN TOKENS
+   ============================================================ */
+:root {
+  --bg-primary: #1e1e2e;
+  --bg-secondary: #181825;
+  --bg-surface: #252538;
+  --bg-surface-hover: #2a2a3d;
+  --bg-elevated: #303046;
+  --bg-code: #11111b;
+  --border-color: #313145;
+  --border-active: #585880;
+  --text-primary: #cdd6f4;
+  --text-secondary: #a6adc8;
+  --text-muted: #6c7086;
+  --text-heading: #f0f0f8;
+  --accent-primary: #89b4fa;
+  --accent-secondary: #74c7ec;
+  --accent-success: #a6e3a1;
+  --accent-warning: #f9e2af;
+  --accent-error: #f38ba8;
+
+  /* 4 cores de syntax highlight */
+  --hl-keyword: #cba6f7;
+  --hl-string: #a6e3a1;
+  --hl-number: #fab387;
+  --hl-comment: #6c7086;
+  --hl-builtin: #89dceb;
+  --hl-constant: #fab387;
+
+  --sidebar-width: 280px;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --transition-fast: 150ms ease;
+  --transition-normal: 250ms ease;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.5);
+}
+
+/* ============================================================
+   RESET
+   ============================================================ */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; font-size:16px; -webkit-font-smoothing:antialiased; }
+body {
+  font-family: var(--font-sans);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  display: flex;
+  min-height: 100vh;
+  overflow-x: hidden;
+  line-height: 1.6;
+}
+a { color: var(--accent-primary); text-decoration:none; }
+::selection { background: rgba(137,180,250,0.25); color: var(--text-heading); }
+::-webkit-scrollbar { width:8px; height:8px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-color); border-radius:4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--border-active); }
+
+/* ============================================================
+   SIDEBAR
+   ============================================================ */
+.sidebar {
+  width: var(--sidebar-width);
+  min-width: var(--sidebar-width);
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border-color);
+  z-index: 100;
+  transition: transform var(--transition-normal);
+}
+.sidebar-header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding: 12px 20px; border-bottom:1px solid var(--border-color); min-height:56px;
+}
+.logo { display:flex; align-items:center; gap:8px; }
+.logo-icon {
+  font-family: var(--font-mono); font-size:1.1rem; font-weight:700;
+  color: var(--accent-primary); background: rgba(137,180,250,0.1);
+  padding:2px 8px; border-radius: var(--radius-sm);
+}
+.logo-text { font-weight:700; font-size:0.95rem; color: var(--text-heading); }
+.sidebar-close {
+  display:none; background:none; border:none; color: var(--text-muted);
+  font-size:1.5rem; cursor:pointer; padding:2px 6px; border-radius: var(--radius-sm);
+}
+.sidebar-close:hover { color: var(--text-primary); background: var(--bg-surface); }
+.sidebar-search { padding:8px 16px; border-bottom:1px solid var(--border-color); }
+.sidebar-search input {
+  width:100%; padding:8px 14px; background: var(--bg-surface);
+  border:1px solid var(--border-color); border-radius: var(--radius-md);
+  color: var(--text-primary); font-family: var(--font-sans); font-size:0.82rem; outline:none;
+  transition: border-color var(--transition-fast);
+}
+.sidebar-search input::placeholder { color: var(--text-muted); }
+.sidebar-search input:focus { border-color: var(--accent-primary); }
+.sidebar-nav { flex:1; overflow-y:auto; padding:4px 0; }
+.nav-section { padding:4px 0; }
+.nav-section-label {
+  display:block; padding:4px 20px; font-size:0.68rem; font-weight:600;
+  text-transform:uppercase; letter-spacing:0.8px; color: var(--text-muted); margin-top:8px;
+}
+.nav-item {
+  display:flex; align-items:center; gap:8px; padding:7px 20px;
+  font-size:0.84rem; color: var(--text-secondary); cursor:pointer;
+  transition: all var(--transition-fast); border-left:3px solid transparent; user-select:none;
+}
+.nav-item:hover { background: var(--bg-surface-hover); color: var(--text-primary); }
+.nav-item.active {
+  color: var(--accent-primary); background: rgba(137,180,250,0.06);
+  border-left-color: var(--accent-primary);
+}
+.nav-item-icon {
+  font-family: var(--font-mono); font-size:0.7rem; width:22px; height:22px;
+  display:flex; align-items:center; justify-content:center;
+  border-radius: var(--radius-sm); background: var(--bg-surface);
+  color: var(--text-muted); flex-shrink:0; font-weight:600;
+}
+.nav-item.active .nav-item-icon {
+  background: rgba(137,180,250,0.15); color: var(--accent-primary);
+}
+.nav-item-text { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.nav-item.hidden { display:none; }
+.sidebar-footer {
+  padding:14px 20px; border-top:1px solid var(--border-color);
+  display:flex; align-items:center; gap:8px; font-size:0.72rem; color: var(--text-muted);
+}
+.sidebar-footer .separator { opacity:0.4; }
+.sidebar-overlay {
+  display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6);
+  z-index:99; opacity:0; transition: opacity var(--transition-normal);
+}
+.sidebar-overlay.visible { display:block; opacity:1; }
+
+/* ============================================================
+   MAIN
+   ============================================================ */
+.main { flex:1; display:flex; flex-direction:column; min-height:100vh; overflow-y:auto; }
+.topbar {
+  display:flex; align-items:center; padding:8px 24px; min-height:48px;
+  border-bottom:1px solid var(--border-color); background: var(--bg-secondary);
+  position:sticky; top:0; z-index:50; gap:16px;
+}
+.menu-toggle { display:none; flex-direction:column; gap:4px; background:none; border:none; cursor:pointer; padding:4px; }
+.menu-toggle span { display:block; width:20px; height:2px; background: var(--text-secondary); border-radius:1px; }
+.breadcrumb { display:flex; align-items:center; gap:8px; font-size:0.82rem; color: var(--text-muted); flex:1; }
+.breadcrumb-current { color: var(--text-primary); font-weight:500; }
+.breadcrumb-sep { opacity:0.4; }
+.btn-scroll-top {
+  padding:4px 12px; font-size:0.75rem; font-family: var(--font-sans);
+  background: var(--bg-surface); border:1px solid var(--border-color);
+  color: var(--text-secondary); border-radius: var(--radius-sm); cursor:pointer;
+  transition: all var(--transition-fast);
+}
+.btn-scroll-top:hover { background: var(--bg-surface-hover); color: var(--text-primary); }
+
+/* ============================================================
+   CONTENT
+   ============================================================ */
+.content-area { flex:1; max-width:900px; width:100%; margin:0 auto; padding:32px 24px; }
+.welcome-screen { display:none; text-align:center; padding:48px 0; animation: fadeInUp 0.5s ease; }
+.welcome-screen.active { display:block; }
+.welcome-inner { max-width:600px; margin:0 auto; }
+.welcome-badge {
+  display:inline-block; font-family: var(--font-mono); font-size:0.78rem; font-weight:600;
+  color: var(--accent-primary); background: rgba(137,180,250,0.1);
+  border:1px solid rgba(137,180,250,0.2); padding:4px 14px; border-radius:20px; margin-bottom:24px;
+}
+.welcome-screen h1 { font-size:2.2rem; font-weight:700; color: var(--text-heading); line-height:1.2; margin-bottom:16px; }
+.welcome-desc { font-size:1rem; color: var(--text-secondary); line-height:1.7; margin-bottom:32px; }
+.welcome-stats { display:flex; justify-content:center; gap:24px; margin-bottom:32px; }
+.stat-card {
+  background: var(--bg-surface); border:1px solid var(--border-color);
+  border-radius: var(--radius-md); padding:16px 24px; display:flex; flex-direction:column;
+  gap:2px; min-width:100px; transition: all var(--transition-fast);
+}
+.stat-card:hover { border-color: var(--border-active); transform:translateY(-2px); box-shadow: var(--shadow-sm); }
+.stat-number { font-family: var(--font-mono); font-size:1.4rem; font-weight:700; color: var(--accent-primary); }
+.stat-label { font-size:0.75rem; color: var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; }
+.btn-primary {
+  display:inline-flex; align-items:center; gap:8px; padding:10px 28px;
+  font-family: var(--font-sans); font-size:0.88rem; font-weight:600;
+  color: var(--bg-primary); background: var(--accent-primary); border:none;
+  border-radius: var(--radius-md); cursor:pointer; transition: all var(--transition-fast);
+}
+.btn-primary:hover { background: var(--accent-secondary); transform:translateY(-1px); box-shadow: var(--shadow-md); }
+
+/* Topic View */
+.topic-view { display:none; animation: fadeInUp 0.4s ease; }
+.topic-view.active { display:block; }
+.topic-header { margin-bottom:24px; padding-bottom:24px; border-bottom:1px solid var(--border-color); }
+.topic-title { font-size:1.6rem; font-weight:700; color: var(--text-heading); margin-bottom:8px; }
+.topic-desc { font-size:0.92rem; color: var(--text-secondary); line-height:1.6; }
+.topic-tabs { display:flex; gap:2px; margin-bottom:24px; border-bottom:1px solid var(--border-color); overflow-x:auto; }
+.tab-btn {
+  padding:8px 16px; font-family: var(--font-sans); font-size:0.82rem; font-weight:500;
+  color: var(--text-muted); background:none; border:none;
+  border-bottom:2px solid transparent; cursor:pointer; white-space:nowrap;
+  transition: all var(--transition-fast);
+}
+.tab-btn:hover { color: var(--text-primary); }
+.tab-btn.active { color: var(--accent-primary); border-bottom-color: var(--accent-primary); }
+.topic-content { min-height:300px; }
+.tab-panel { display:none; animation: fadeIn 0.3s ease; }
+.tab-panel.active { display:block; }
+
+/* Content Typography */
+.content-block { margin-bottom:32px; }
+.content-block h2 {
+  font-size:1.15rem; font-weight:600; color: var(--text-heading);
+  margin-bottom:16px; padding-left:16px; border-left:3px solid var(--accent-primary);
+}
+.content-block h3 { font-size:0.98rem; font-weight:600; color: var(--text-heading); margin-bottom:8px; margin-top:24px; }
+.content-block p { font-size:0.9rem; color: var(--text-secondary); line-height:1.7; margin-bottom:16px; }
+.content-block ul, .content-block ol { font-size:0.9rem; color: var(--text-secondary); line-height:1.7; margin-bottom:16px; padding-left:24px; }
+.content-block li { margin-bottom:4px; }
+.content-block strong { color: var(--text-primary); font-weight:600; }
+.inline-code {
+  font-family: var(--font-mono); font-size:0.82em; background: var(--bg-code);
+  color: var(--accent-warning); padding:2px 7px; border-radius: var(--radius-sm);
+  border:1px solid var(--border-color);
+}
+.info-box {
+  background: rgba(137,180,250,0.06); border:1px solid rgba(137,180,250,0.2);
+  border-left:3px solid var(--accent-primary); border-radius: var(--radius-md);
+  padding:16px; margin-bottom:24px; font-size:0.86rem; color: var(--text-secondary); line-height:1.6;
+}
+.info-box strong { color: var(--accent-primary); }
+.warning-box {
+  background: rgba(249,226,175,0.06); border:1px solid rgba(249,226,175,0.2);
+  border-left:3px solid var(--accent-warning); border-radius: var(--radius-md);
+  padding:16px; margin-bottom:24px; font-size:0.86rem; color: var(--text-secondary); line-height:1.6;
+}
+.warning-box strong { color: var(--accent-warning); }
+.content-table { width:100%; border-collapse:collapse; margin-bottom:24px; font-size:0.85rem; }
+.content-table th, .content-table td { padding:8px 16px; text-align:left; border:1px solid var(--border-color); }
+.content-table th { background: var(--bg-surface); color: var(--text-heading); font-weight:600; font-size:0.8rem; text-transform:uppercase; }
+.content-table td { color: var(--text-secondary); }
+.content-table code { font-family: var(--font-mono); font-size:0.82em; color: var(--accent-warning); }
+.content-table tr:hover td { background: var(--bg-surface-hover); }
+
+/* ============================================================
+   CODE BLOCK (IDE style)
+   ============================================================ */
+.code-block {
+  background: var(--bg-code); border:1px solid var(--border-color);
+  border-radius: var(--radius-md); margin-bottom:24px; overflow:hidden;
+  transition: border-color var(--transition-fast);
+}
+.code-block:hover { border-color: var(--border-active); }
+.code-header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:8px 16px; background: var(--bg-surface); border-bottom:1px solid var(--border-color);
+}
+.code-header-left { display:flex; align-items:center; gap:8px; }
+.code-dots { display:flex; gap:5px; }
+.code-dot { width:10px; height:10px; border-radius:50%; }
+.code-dot.red { background:#ed8796; }
+.code-dot.yellow { background:#eed49f; }
+.code-dot.green { background:#a6da95; }
+.code-filename { font-family: var(--font-mono); font-size:0.72rem; color: var(--text-muted); }
+.code-copy-btn {
+  font-family: var(--font-sans); font-size:0.72rem; padding:3px 10px;
+  background: var(--bg-elevated); border:1px solid var(--border-color);
+  color: var(--text-muted); border-radius: var(--radius-sm); cursor:pointer;
+  transition: all var(--transition-fast);
+}
+.code-copy-btn:hover { background: var(--bg-surface-hover); color: var(--text-primary); border-color: var(--border-active); }
+.code-copy-btn.copied { background: rgba(166,227,161,0.15); color: var(--accent-success); border-color: rgba(166,227,161,0.3); }
+.code-body { display:flex; overflow-x:auto; padding:16px 0; }
+.code-lines {
+  display:flex; flex-direction:column; padding:0 14px; text-align:right;
+  user-select:none; border-right:1px solid var(--border-color); min-width:40px;
+}
+.code-line-number { font-family: var(--font-mono); font-size:0.78rem; line-height:1.65; color: var(--text-muted); opacity:0.5; }
+.code-content { flex:1; padding:0 16px; }
+.code-content pre { font-family: var(--font-mono); font-size:0.82rem; line-height:1.65; white-space:pre; color: var(--text-primary); }
+
+/* Syntax — apenas 4 cores simples */
+.hl-keyword  { color: var(--hl-keyword); }
+.hl-string   { color: var(--hl-string); }
+.hl-number   { color: var(--hl-number); }
+.hl-comment  { color: var(--hl-comment); font-style:italic; }
+.hl-builtin  { color: var(--hl-builtin); }
+.hl-constant { color: var(--hl-constant); }
+
+/* Output */
+.output-block {
+  background: var(--bg-code); border:1px solid var(--border-color);
+  border-radius: var(--radius-md); margin-bottom:24px; overflow:hidden;
+}
+.output-header {
+  display:flex; align-items:center; padding:8px 16px;
+  background: rgba(166,227,161,0.06); border-bottom:1px solid var(--border-color);
+  font-family: var(--font-mono); font-size:0.72rem; color: var(--accent-success);
+}
+.output-body { padding:16px; }
+.output-body pre { font-family: var(--font-mono); font-size:0.82rem; line-height:1.6; color: var(--text-secondary); }
+
+/* ============================================================
+   BOTTOM NAV
+   ============================================================ */
+.topic-nav-bottom {
+  display:flex; justify-content:space-between; padding-top:32px;
+  margin-top:32px; border-top:1px solid var(--border-color);
+}
+.btn-nav-prev, .btn-nav-next {
+  padding:8px 20px; font-family: var(--font-sans); font-size:0.84rem; font-weight:500;
+  border:1px solid var(--border-color); border-radius: var(--radius-md); cursor:pointer;
+  transition: all var(--transition-fast); background: var(--bg-surface); color: var(--text-secondary);
+}
+.btn-nav-prev:hover:not(:disabled), .btn-nav-next:hover:not(:disabled) {
+  background: var(--bg-surface-hover); color: var(--text-primary); border-color: var(--border-active); transform:translateY(-1px);
+}
+.btn-nav-prev:disabled, .btn-nav-next:disabled { opacity:0.3; cursor:not-allowed; }
+
+/* ============================================================
+   TOAST
+   ============================================================ */
+.toast {
+  position:fixed; bottom:24px; left:50%;
+  transform:translateX(-50%) translateY(80px);
+  background: var(--bg-elevated); color: var(--accent-success);
+  border:1px solid rgba(166,227,161,0.3); padding:8px 20px;
+  border-radius: var(--radius-md); font-size:0.82rem; font-weight:500;
+  opacity:0; pointer-events:none; transition: all 0.35s cubic-bezier(0.4,0,0.2,1);
+  z-index:200; box-shadow: var(--shadow-lg);
+}
+.toast.visible { opacity:1; transform:translateX(-50%) translateY(0); }
+
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+@keyframes fadeInUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media(max-width:900px) {
+  .sidebar { position:fixed; left:0; top:0; transform:translateX(-100%); box-shadow: var(--shadow-lg); }
+  .sidebar.open { transform:translateX(0); }
+  .sidebar-close { display:block; }
+  .menu-toggle { display:flex; }
+  .content-area { padding:24px 14px; }
+  .welcome-screen h1 { font-size:1.6rem; }
+  .welcome-stats { flex-direction:column; align-items:center; }
+  .stat-card { width:100%; max-width:220px; }
+  .topic-title { font-size:1.3rem; }
+}
+@media(max-width:480px) {
+  .content-area { padding:16px 8px; }
+  .topbar { padding:8px 14px; }
+  .content-table { font-size:0.75rem; }
+  .content-table th, .content-table td { padding:4px 8px; }
+}
+</style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">
+        <span class="logo-icon">&gt;_</span>
+        <span class="logo-text">PyFundamentos</span>
+      </div>
+      <button class="sidebar-close" id="sidebar-close" aria-label="Fechar menu">&times;</button>
+    </div>
+    <div class="sidebar-search">
+      <input type="text" id="search-input" placeholder="Buscar topico..." autocomplete="off" />
+    </div>
+    <nav class="sidebar-nav" id="sidebar-nav"></nav>
+    <div class="sidebar-footer">
+      <span class="version">v1.0.0</span>
+      <span class="separator">|</span>
+      <span class="tech">HTML / CSS / JS</span>
+    </div>
+  </aside>
+
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- Main -->
+  <main class="main" id="main">
+    <header class="topbar">
+      <button class="menu-toggle" id="menu-toggle" aria-label="Abrir menu">
+        <span></span><span></span><span></span>
+      </button>
+      <div class="breadcrumb">
+        <span class="breadcrumb-root">PyFundamentos</span>
+        <span class="breadcrumb-sep">/</span>
+        <span class="breadcrumb-current" id="breadcrumb-current">Inicio</span>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn-scroll-top" id="btn-scroll-top" title="Voltar ao topo">Topo</button>
+      </div>
+    </header>
+
+    <div class="content-area" id="content-area">
+      <!-- Welcome -->
+      <section class="welcome-screen active" id="welcome-screen">
+        <div class="welcome-inner">
+          <div class="welcome-badge">&gt;_ Python Fundamentals</div>
+          <h1>Domine os fundamentos de Python</h1>
+          <p class="welcome-desc">Plataforma interativa para aprender os conceitos essenciais da linguagem Python. Navegue pelos topicos no menu lateral.</p>
+          <div class="welcome-stats">
+            <div class="stat-card"><span class="stat-number">13</span><span class="stat-label">Topicos</span></div>
+            <div class="stat-card"><span class="stat-number">50+</span><span class="stat-label">Exemplos</span></div>
+            <div class="stat-card"><span class="stat-number">100%</span><span class="stat-label">Pratico</span></div>
+          </div>
+          <button class="btn-primary" id="btn-start">Comecar a estudar</button>
+        </div>
+      </section>
+
+      <!-- Topic -->
+      <section class="topic-view" id="topic-view">
+        <div class="topic-header">
+          <h1 class="topic-title" id="topic-title"></h1>
+          <p class="topic-desc" id="topic-desc"></p>
+        </div>
+        <div class="topic-tabs" id="topic-tabs"></div>
+        <div class="topic-content" id="topic-content"></div>
+        <div class="topic-nav-bottom">
+          <button class="btn-nav-prev" id="btn-prev" disabled>Anterior</button>
+          <button class="btn-nav-next" id="btn-next">Proximo</button>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <div class="toast" id="toast">Codigo copiado!</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ==========================================================
+     ESCAPE HTML
+     ========================================================== */
+  function esc(s) {
+    return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+
+  /* ==========================================================
+     TOKENIZER — transforma uma linha de codigo em tokens
+     Cada token = { type, value }
+     Tipos: keyword, builtin, constant, string, number, comment, plain
+     ========================================================== */
+  var KW = ["import","from","as","def","class","return","yield","if","elif","else",
+    "for","while","break","continue","pass","try","except","finally","raise","with",
+    "and","or","not","in","is","lambda","global","nonlocal","del","assert","match","case"];
+  var BI = ["print","input","len","range","type","isinstance","int","float","str","bool",
+    "list","dict","set","tuple","map","filter","zip","enumerate","sorted","reversed",
+    "abs","round","min","max","sum","open","super","chr","ord","hex","format","id",
+    "hasattr","getattr","any","all"];
+  var CO = ["True","False","None"];
+
+  function tokenize(line) {
+    var t = [], i = 0, n = line.length;
+    while (i < n) {
+      // comment #
+      if (line[i] === "#") { t.push({type:"comment",value:line.substring(i)}); break; }
+      // comment //
+      if (line[i] === "/" && i+1 < n && line[i+1] === "/") { t.push({type:"comment",value:line.substring(i)}); break; }
+      // triple quotes
+      if (i+2 < n && (line.substring(i,i+3)==='"""' || line.substring(i,i+3)==="'''")) {
+        var q = line.substring(i,i+3), pf = "";
+        if (t.length && t[t.length-1].type==="plain" && /^[frb]$/.test(t[t.length-1].value)) pf = t.pop().value;
+        var e = line.indexOf(q, i+3);
+        if (e !== -1) { t.push({type:"string",value:pf+line.substring(i,e+3)}); i=e+3; }
+        else { t.push({type:"string",value:pf+line.substring(i)}); break; }
+        continue;
+      }
+      // string
+      if (line[i]==='"' || line[i]==="'") {
+        var ch=line[i], pf2="";
+        if (t.length && t[t.length-1].type==="plain" && /^[frb]$/.test(t[t.length-1].value)) pf2=t.pop().value;
+        var j=i+1;
+        while(j<n){ if(line[j]==="\\"){j+=2;continue;} if(line[j]===ch){j++;break;} j++; }
+        t.push({type:"string",value:pf2+line.substring(i,j)}); i=j; continue;
+      }
+      // number
+      if (/[0-9]/.test(line[i]) || (line[i]==="." && i+1<n && /[0-9]/.test(line[i+1]))) {
+        var s=i;
+        if (line[i]==="0" && i+1<n && /[xXbBoO]/.test(line[i+1])) { i+=2; while(i<n && /[0-9a-fA-F_]/.test(line[i]))i++; }
+        else { while(i<n && /[0-9_]/.test(line[i]))i++; if(i<n&&line[i]==="."){i++;while(i<n&&/[0-9_]/.test(line[i]))i++;} if(i<n&&/[eE]/.test(line[i])){i++;if(i<n&&/[+-]/.test(line[i]))i++;while(i<n&&/[0-9]/.test(line[i]))i++;} }
+        t.push({type:"number",value:line.substring(s,i)}); continue;
+      }
+      // word
+      if (/[a-zA-Z_]/.test(line[i])) {
+        var ws=i; while(i<n && /[a-zA-Z0-9_]/.test(line[i]))i++;
+        var w=line.substring(ws,i);
+        if (CO.indexOf(w)!==-1) t.push({type:"constant",value:w});
+        else if (KW.indexOf(w)!==-1) t.push({type:"keyword",value:w});
+        else if (BI.indexOf(w)!==-1) t.push({type:"builtin",value:w});
+        else t.push({type:"plain",value:w});
+        continue;
+      }
+      t.push({type:"plain",value:line[i]}); i++;
+    }
+    return t;
+  }
+
+  function highlightLine(line) {
+    var tokens = tokenize(line), html = "";
+    for (var k = 0; k < tokens.length; k++) {
+      var v = esc(tokens[k].value);
+      switch(tokens[k].type) {
+        case "keyword":  html += '<span class="hl-keyword">'  + v + '</span>'; break;
+        case "builtin":  html += '<span class="hl-builtin">'  + v + '</span>'; break;
+        case "constant": html += '<span class="hl-constant">' + v + '</span>'; break;
+        case "string":   html += '<span class="hl-string">'   + v + '</span>'; break;
+        case "number":   html += '<span class="hl-number">'   + v + '</span>'; break;
+        case "comment":  html += '<span class="hl-comment">'  + v + '</span>'; break;
+        default:         html += v;
+      }
+    }
+    return html;
+  }
+
+  function highlightCode(raw) {
+    return raw.split("\n").map(highlightLine).join("\n");
+  }
+
+  /* ==========================================================
+     CODE BLOCK / OUTPUT BLOCK BUILDERS
+     ========================================================== */
+  function trimLines(code) {
+    var lines = code.split("\n");
+    while (lines.length && lines[0].trim()==="") lines.shift();
+    while (lines.length && lines[lines.length-1].trim()==="") lines.pop();
+    return lines;
+  }
+
+  function codeBlock(filename, code) {
+    var lines = trimLines(code);
+    var nums = "", i;
+    for (i = 0; i < lines.length; i++) nums += '<span class="code-line-number">' + (i+1) + '</span>\n';
+    var hi = highlightCode(lines.join("\n"));
+    var raw = encodeURIComponent(lines.join("\n"));
+    return '<div class="code-block">'
+      +'<div class="code-header"><div class="code-header-left">'
+      +'<div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>'
+      +'<span class="code-filename">'+filename+'</span></div>'
+      +'<button class="code-copy-btn" data-code="'+raw+'">Copiar</button></div>'
+      +'<div class="code-body"><div class="code-lines">'+nums+'</div>'
+      +'<div class="code-content"><pre>'+hi+'</pre></div></div></div>';
+  }
+
+  function out(text) {
+    var lines = trimLines(text);
+    return '<div class="output-block"><div class="output-header">Saida</div>'
+      +'<div class="output-body"><pre>'+esc(lines.join("\n"))+'</pre></div></div>';
+  }
+
+  /* ==========================================================
+     TOPICS DATA — 13 topicos completos
+     ========================================================== */
+  var TOPICS = [
+
+  // 1 VARIAVEIS
+  { id:"variaveis", title:"Variaveis", icon:"x=", section:"Fundamentos",
+    desc:"Como Python armazena dados em variaveis, regras de nomeacao e tipagem dinamica.",
+    tabs:[
+    { label:"Conceito", content:
+      '<div class="content-block"><h2>O que sao variaveis?</h2>'
+      +'<p>Uma variavel e um <strong>nome que guarda um valor na memoria</strong>. Em Python voce nao declara tipo, basta usar <span class="inline-code">=</span>.</p>'
+      +codeBlock("var_basica.py","nome = \"Maria\"\nidade = 25\npreco = 49.90\nativo = True\n\nprint(nome)\nprint(idade)\nprint(preco)\nprint(ativo)")
+      +out("Maria\n25\n49.9\nTrue")
+      +'<h3>Tipagem dinamica</h3><p>A mesma variavel pode mudar de tipo:</p>'
+      +codeBlock("tipagem.py","dado = 42\nprint(type(dado))   # <class 'int'>\n\ndado = \"texto\"\nprint(type(dado))   # <class 'str'>\n\ndado = [1, 2, 3]\nprint(type(dado))   # <class 'list'>")
+      +'<h3>Regras de nomeacao</h3>'
+      +codeBlock("regras.py","# VALIDO\nnome_aluno = \"Carlos\"\nnota_1 = 8.5\n_interno = 100\nTAXA_MAX = 0.15\n\n# INVALIDO\n# 2nome = \"erro\"       comeca com numero\n# nome-completo = \"x\"  hifen nao e permitido\n# class = \"turma\"      palavra reservada\n\n# Case-sensitive\nIdade = 20\nidade = 25\nprint(Idade, idade)  # 20 25")
+      +out("20 25")
+      +'<div class="info-box"><strong>PEP 8:</strong> Use <code>snake_case</code> para variaveis. Use <code>UPPER_CASE</code> para constantes.</div></div>'
+    },
+    { label:"Exemplos", content:
+      '<div class="content-block"><h2>Atribuicao simples e multipla</h2>'
+      +codeBlock("atribuicao.py","# Simples\nnome = \"Carlos\"\nidade = 34\nsalario = 6200.00\n\n# Multipla\nx, y, z = 10, 20, 30\nprint(x, y, z)\n\n# Mesmo valor\na = b = c = 0\nprint(a, b, c)\n\n# Troca de valores\na, b = 5, 10\na, b = b, a\nprint(a, b)")
+      +out("10 20 30\n0 0 0\n10 5")
+      +'<h2>Cadastro de produto</h2>'
+      +codeBlock("produto.py","nome_produto = \"Notebook Gamer\"\nmarca = \"ASUS\"\npreco_original = 5499.90\ndesconto = 12\nestoque = 45\n\npreco_final = preco_original * (1 - desconto / 100)\n\nprint(\"=== Cadastro ===\")\nprint(f\"Produto:  {nome_produto}\")\nprint(f\"Marca:    {marca}\")\nprint(f\"De:       R$ {preco_original:,.2f}\")\nprint(f\"Desconto: {desconto}%\")\nprint(f\"Por:      R$ {preco_final:,.2f}\")\nprint(f\"Estoque:  {estoque} un\")")
+      +out("=== Cadastro ===\nProduto:  Notebook Gamer\nMarca:    ASUS\nDe:       R$ 5,499.90\nDesconto: 12%\nPor:      R$ 4,839.91\nEstoque:  45 un")
+      +'<h2>Dados de um aluno</h2>'
+      +codeBlock("aluno.py","nome = \"Pedro\"\nnota1, nota2, nota3 = 7.5, 8.0, 6.5\nmedia = (nota1 + nota2 + nota3) / 3\naprovado = media >= 6.0\n\nprint(f\"Aluno: {nome}\")\nprint(f\"Notas: {nota1} | {nota2} | {nota3}\")\nprint(f\"Media: {media:.2f}\")\nprint(f\"Aprovado: {aprovado}\")")
+      +out("Aluno: Pedro\nNotas: 7.5 | 8.0 | 6.5\nMedia: 7.33\nAprovado: True")
+      +'</div>'
+    }]
+  },
+
+  // 2 TIPOS DE DADOS
+  { id:"tipos-dados", title:"Tipos de Dados", icon:"T", section:"Fundamentos",
+    desc:"Os quatro tipos primitivos: int, float, str e bool.",
+    tabs:[
+    { label:"Conceito", content:
+      '<div class="content-block"><h2>Tipos primitivos</h2>'
+      +'<table class="content-table"><thead><tr><th>Tipo</th><th>Guarda</th><th>Exemplo</th></tr></thead><tbody>'
+      +'<tr><td><code>int</code></td><td>Inteiros</td><td><code>42, -17, 0</code></td></tr>'
+      +'<tr><td><code>float</code></td><td>Decimais</td><td><code>3.14, -0.5</code></td></tr>'
+      +'<tr><td><code>str</code></td><td>Texto</td><td><code>"Python"</code></td></tr>'
+      +'<tr><td><code>bool</code></td><td>Logico</td><td><code>True, False</code></td></tr></tbody></table>'
+      +codeBlock("int_ex.py","idade = 25\npopulacao = 203_000_000\nnegativo = -42\nprint(type(idade))  # <class 'int'>")
+      +codeBlock("float_ex.py","preco = 49.90\ntaxa = 0.0125\nprint(type(preco))  # <class 'float'>\n\n# Cuidado!\nprint(0.1 + 0.2)         # 0.30000000000000004\nprint(0.1 + 0.2 == 0.3)  # False")
+      +codeBlock("str_ex.py","nome = \"Maria\"\nfrase = 'Ele disse \"ola\"'\nvazia = \"\"\nprint(len(vazia))   # 0\nprint(bool(vazia))  # False")
+      +codeBlock("bool_ex.py","ativo = True\nprint(True + True)    # 2\nprint(bool(0))        # False\nprint(bool(\"\"))       # False\nprint(bool(42))       # True\nprint(bool(\"texto\"))  # True")
+      +'</div>'
+    },
+    { label:"Exemplos", content:
+      '<div class="content-block"><h2>Ficha de veiculo (todos os tipos)</h2>'
+      +codeBlock("veiculo.py","marca = \"Toyota\"          # str\nmodelo = \"Corolla\"        # str\nano = 2024                 # int\npreco = 184990.00          # float\nhibrido = True             # bool\n\nconsumo = 13.5\ntanque = 55\nautonomia = tanque * consumo\n\nprint(f\"Carro:     {marca} {modelo}\")\nprint(f\"Ano:       {ano}\")\nprint(f\"Preco:     R$ {preco:,.2f}\")\nprint(f\"Hibrido:   {'Sim' if hibrido else 'Nao'}\")\nprint(f\"Autonomia: {autonomia:.0f} km\")")
+      +out("Carro:     Toyota Corolla\nAno:       2024\nPreco:     R$ 184,990.00\nHibrido:   Sim\nAutonomia: 742 km")
+      +'<h2>Calculadora de gorjeta</h2>'
+      +codeBlock("gorjeta.py","restaurante = \"Sabor e Arte\"\nvalor = 187.50\npessoas = 4\ngorjeta_pct = 10\n\ngorjeta = valor * (gorjeta_pct / 100)\ntotal = valor + gorjeta\npor_pessoa = total / pessoas\n\nprint(f\"Restaurante: {restaurante}\")\nprint(f\"Conta:       R$ {valor:.2f}\")\nprint(f\"Gorjeta:     R$ {gorjeta:.2f}\")\nprint(f\"Total:       R$ {total:.2f}\")\nprint(f\"Por pessoa:  R$ {por_pessoa:.2f}\")")
+      +out("Restaurante: Sabor e Arte\nConta:       R$ 187.50\nGorjeta:     R$ 18.75\nTotal:       R$ 206.25\nPor pessoa:  R$ 51.56")
+      +'<h2>Verificando tipos</h2>'
+      +codeBlock("verif.py","dados = [42, 3.14, \"Python\", True, None]\n\nfor item in dados:\n    t = type(item).__name__\n    print(f\"  {str(item):>10} -> {t}\")")
+      +out("          42 -> int\n        3.14 -> float\n      Python -> str\n        True -> bool\n        None -> NoneType")
+      +'</div>'
+    }]
+  },
+
+  // 3 ENTRADA E SAIDA
+  { id:"entrada-saida", title:"Entrada e Saida", icon:"IO", section:"Fundamentos",
+    desc:"Ler dados com input() e exibir com print().",
+    tabs:[
+    { label:"print()", content:
+      '<div class="content-block"><h2>Funcao print()</h2>'
+      +codeBlock("print1.py","print(\"Sistema iniciado\")\n\nnome = \"Ana\"\nidade = 28\nprint(\"Nome:\", nome, \"| Idade:\", idade)\nprint(42, 3.14, True)")
+      +out("Sistema iniciado\nNome: Ana | Idade: 28\n42 3.14 True")
+      +'<h3>Parametros sep e end</h3>'
+      +codeBlock("print2.py","print(\"2024\", \"03\", \"15\", sep=\"-\")\nprint(\"Python\", \"Java\", \"C++\", sep=\" | \")\n\nprint(\"Carregando\", end=\"...\")\nprint(\" Concluido!\")")
+      +out("2024-03-15\nPython | Java | C++\nCarregando... Concluido!")
+      +'<h2>Tabela formatada</h2>'
+      +codeBlock("tabela.py","produtos = [(\"Cafe\", 5.50), (\"Pao\", 0.75), (\"Suco\", 12.00)]\n\nprint(f\"{'PRODUTO':<12} {'PRECO':>8}\")\nprint(\"-\" * 22)\nfor nome, preco in produtos:\n    print(f\"{nome:<12} R${preco:>6.2f}\")")
+      +out("PRODUTO         PRECO\n----------------------\nCafe         R$  5.50\nPao          R$  0.75\nSuco         R$ 12.00")
+      +'</div>'
+    },
+    { label:"input()", content:
+      '<div class="content-block"><h2>Funcao input()</h2><p><strong>Sempre retorna string!</strong> Precisa converter.</p>'
+      +codeBlock("input1.py","nome = input(\"Seu nome: \")\nprint(f\"Ola, {nome}!\")\n\n# Converter para numero\nidade = int(input(\"Sua idade: \"))\npeso = float(input(\"Seu peso: \"))\n\n# Ler dois valores em uma linha\na, b = input(\"Dois numeros: \").split()\na, b = int(a), int(b)\nprint(f\"Soma: {a + b}\")")
+      +'<h2>Programa: calculadora de IMC</h2>'
+      +codeBlock("imc.py","print(\"=== CALCULADORA DE IMC ===\")\n\nnome = input(\"Nome: \")\npeso = float(input(\"Peso (kg): \"))\naltura = float(input(\"Altura (m): \"))\n\nimc = peso / (altura ** 2)\n\nif imc < 18.5:\n    classe = \"Abaixo do peso\"\nelif imc < 25:\n    classe = \"Peso normal\"\nelif imc < 30:\n    classe = \"Sobrepeso\"\nelse:\n    classe = \"Obesidade\"\n\nprint(f\"\\nPaciente: {nome}\")\nprint(f\"IMC: {imc:.1f}\")\nprint(f\"Classe: {classe}\")")
+      +out("=== CALCULADORA DE IMC ===\nNome: Maria\nPeso (kg): 65\nAltura (m): 1.68\n\nPaciente: Maria\nIMC: 23.0\nClasse: Peso normal")
+      +'<h2>Programa: conversor de temperatura</h2>'
+      +codeBlock("temp.py","print(\"[1] Celsius -> Fahrenheit\")\nprint(\"[2] Fahrenheit -> Celsius\")\n\nopcao = int(input(\"Escolha: \"))\ntemp = float(input(\"Temperatura: \"))\n\nif opcao == 1:\n    r = (temp * 9/5) + 32\n    print(f\"{temp:.1f} C = {r:.1f} F\")\nelif opcao == 2:\n    r = (temp - 32) * 5/9\n    print(f\"{temp:.1f} F = {r:.1f} C\")\nelse:\n    print(\"Opcao invalida!\")")
+      +out("[1] Celsius -> Fahrenheit\n[2] Fahrenheit -> Celsius\nEscolha: 1\nTemperatura: 37.5\n37.5 C = 99.5 F")
+      +'</div>'
+    }]
+  },
+
+  // 4 CONVERSAO DE TIPOS
+  { id:"conversao-tipos", title:"Conversao de Tipos", icon:"->", section:"Fundamentos",
+    desc:"Converter entre int, float, str e bool com casting.",
+    tabs:[
+    { label:"Conceito", content:
+      '<div class="content-block"><h2>Funcoes de conversao</h2>'
+      +'<table class="content-table"><thead><tr><th>Funcao</th><th>Converte para</th><th>Detalhe</th></tr></thead><tbody>'
+      +'<tr><td><code>int()</code></td><td>Inteiro</td><td>Trunca decimais (nao arredonda)</td></tr>'
+      +'<tr><td><code>float()</code></td><td>Decimal</td><td>Aceita int e str numerica</td></tr>'
+      +'<tr><td><code>str()</code></td><td>Texto</td><td>Funciona com qualquer tipo</td></tr>'
+      +'<tr><td><code>bool()</code></td><td>Logico</td><td>Vazios = False, resto = True</td></tr></tbody></table>'
+      +codeBlock("conv_int.py","print(int(7.9))       # 7 (trunca!)\nprint(int(-3.7))      # -3\nprint(int(\"42\"))      # 42\nprint(int(True))      # 1\nprint(int(False))     # 0\n\n# ERRO: string decimal nao converte direto\n# int(\"3.14\")  -> ValueError\n# Solucao:\nprint(int(float(\"3.14\")))  # 3")
+      +out("7\n-3\n42\n1\n0\n3")
+      +codeBlock("conv_float.py","print(float(10))       # 10.0\nprint(float(\"3.14\"))   # 3.14\nprint(float(True))     # 1.0")
+      +codeBlock("conv_str.py","print(str(42))         # \"42\"\nprint(str(3.14))       # \"3.14\"\nprint(str(True))       # \"True\"\nprint(str(None))       # \"None\"")
+      +codeBlock("conv_bool.py","# Falsy (viram False)\nprint(bool(0))       # False\nprint(bool(0.0))     # False\nprint(bool(\"\"))      # False\nprint(bool([]))      # False\nprint(bool(None))    # False\n\n# Truthy (viram True)\nprint(bool(1))       # True\nprint(bool(-5))      # True\nprint(bool(\"a\"))     # True\nprint(bool(\"False\")) # True (string nao vazia!)")
+      +'<div class="warning-box"><strong>Cuidado:</strong> <code>bool("False")</code> retorna <code>True</code> porque e uma string nao vazia!</div></div>'
+    },
+    { label:"Exemplos", content:
+      '<div class="content-block"><h2>Sistema de notas com validacao</h2>'
+      +codeBlock("notas.py","entrada = \"7.8\"  # simula input\n\ntry:\n    nota = float(entrada)\n    if 0 <= nota <= 10:\n        print(f\"Entrada:   {entrada} (str)\")\n        print(f\"Float:     {nota} (float)\")\n        print(f\"Truncada:  {int(nota)} (int)\")\n        print(f\"Aprovado:  {nota >= 6.0} (bool)\")\n        print(f\"Texto:     '{str(nota)}' (str)\")\n    else:\n        print(\"Nota fora do intervalo!\")\nexcept ValueError:\n    print(f\"'{entrada}' nao e um numero!\")")
+      +out("Entrada:   7.8 (str)\nFloat:     7.8 (float)\nTruncada:  7 (int)\nAprovado:  True (bool)\nTexto:     '7.8' (str)")
+      +'<h2>Calculadora de troco</h2>'
+      +codeBlock("troco.py","compra = 37.45\npago = 100.00\n\ntroco = pago - compra\nprint(f\"Troco: R$ {troco:.2f}\")\n\n# Converter para centavos (int) para evitar erro de float\ncentavos = int(round(troco * 100))\n\nvalores = [5000, 2000, 1000, 500, 200, 100, 50, 25, 10, 5, 1]\nnomes = [\"R$50\",\"R$20\",\"R$10\",\"R$5\",\"R$2\",\"R$1\",\"R$0.50\",\"R$0.25\",\"R$0.10\",\"R$0.05\",\"R$0.01\"]\n\nprint(\"\\nDecomposicao:\")\nfor val, nm in zip(valores, nomes):\n    qtd = centavos // val\n    if qtd > 0:\n        centavos %= val\n        print(f\"  {qtd}x {nm}\")")
+      +out("Troco: R$ 62.55\n\nDecomposicao:\n  1x R$50\n  1x R$10\n  1x R$2\n  1x R$0.50\n  1x R$0.05")
+      +'</div>'
+    }]
+  },
+
+  // 5 FUNCAO TYPE
+  { id:"funcao-type", title:"Funcao type()", icon:"?t", section:"Fundamentos",
+    desc:"Verificar o tipo de qualquer objeto com type() e isinstance().",
+    tabs:[
+    { label:"Conceito", content:
+      '<div class="content-block"><h2>type() — retorna o tipo exato</h2>'
+      +codeBlock("type1.py","print(type(42))           # <class 'int'>\nprint(type(3.14))         # <class 'float'>\nprint(type(\"Python\"))     # <class 'str'>\nprint(type(True))         # <class 'bool'>\nprint(type(None))         # <class 'NoneType'>\nprint(type([1, 2]))       # <class 'list'>\n\n# Pegar so o nome\nvalor = 42\nprint(type(valor).__name__)  # \"int\"")
+      +'<h2>isinstance() — verifica tipo com heranca</h2>'
+      +codeBlock("isinstance1.py","print(isinstance(42, int))        # True\nprint(isinstance(3.14, float))    # True\n\n# Verificar contra varios tipos\nprint(isinstance(42, (int, float)))  # True\n\n# Diferenca importante: bool herda de int\nvalor = True\nprint(type(valor) is int)        # False (e bool, nao int)\nprint(isinstance(valor, int))    # True  (bool herda de int)")
+      +'<div class="info-box"><strong>Quando usar:</strong> <code>type()</code> para depuracao. <code>isinstance()</code> para verificacoes no codigo.</div></div>'
+    },
+    { label:"Exemplos", content:
+      '<div class="content-block"><h2>Depurador de variaveis</h2>'
+      +codeBlock("depurador.py","def inspecionar(nome, valor):\n    tipo = type(valor).__name__\n    tam = len(valor) if hasattr(valor, '__len__') else \"N/A\"\n    print(f\"  {nome:<10} {repr(valor):<20} {tipo:<10} {tam}\")\n\nprint(f\"  {'VAR':<10} {'VALOR':<20} {'TIPO':<10} TAM\")\nprint(\"  \" + \"-\" * 45)\ninspecionar(\"nome\", \"Maria\")\ninspecionar(\"idade\", 28)\ninspecionar(\"notas\", [8.5, 7.0])\ninspecionar(\"vazio\", \"\")\ninspecionar(\"flag\", True)")
+      +out("  VAR        VALOR                TIPO       TAM\n  ---------------------------------------------\n  nome       'Maria'              str        5\n  idade      28                   int        N/A\n  notas      [8.5, 7.0]           list       2\n  vazio      ''                   str        0\n  flag       True                 bool       N/A")
+      +'<h2>Funcao com validacao de tipo</h2>'
+      +codeBlock("valida.py","def calcular_desconto(preco, pct):\n    if not isinstance(preco, (int, float)):\n        raise TypeError(f\"Preco deve ser numero, recebeu {type(preco).__name__}\")\n    if not isinstance(pct, (int, float)):\n        raise TypeError(f\"Percentual deve ser numero\")\n    return preco * (1 - pct / 100)\n\nprint(calcular_desconto(150.00, 10))  # 135.0\nprint(calcular_desconto(200, 25))     # 150.0\n# calcular_desconto(\"150\", 10)  -> TypeError!")
+      +out("135.0\n150.0")
+      +'</div>'
+    }]
+  },
+
+  // 6 OPERADORES
+  { id:"operadores", title:"Operadores", icon:"+-", section:"Estruturas",
+    desc:"Operadores aritmeticos, relacionais, logicos e de atribuicao.",
+    tabs:[
+    { label:"Aritmeticos", content:
+      '<div class="content-block"><h2>Operadores aritmeticos</h2>'
+      +'<table class="content-table"><thead><tr><th>Op</th><th>Nome</th><th>Exemplo</th><th>Resultado</th></tr></thead><tbody>'
+      +'<tr><td><code>+</code></td><td>Soma</td><td><code>7+3</code></td><td><code>10</code></td></tr>'
+      +'<tr><td><code>-</code></td><td>Subtracao</td><td><code>7-3</code></td><td><code>4</code></td></tr>'
+      +'<tr><td><code>*</code></td><td>Multiplicacao</td><td><code>7*3</code></td><td><code>21</code></td></tr>'
+      +'<tr><td><code>/</code></td><td>Divisao real</td><td><code>7/3</code></td><td><code>2.33</code></td></tr>'
+      +'<tr><td><code>//</code></td><td>Divisao inteira</td><td><code>7//3</code></td><td><code>2</code></td></tr>'
+      +'<tr><td><code>%</code></td><td>Resto</td><td><code>7%3</code></td><td><code>1</code></td></tr>'
+      +'<tr><td><code>**</code></td><td>Potencia</td><td><code>2**10</code></td><td><code>1024</code></td></tr></tbody></table>'
+      +codeBlock("arit.py","a, b = 17, 5\nprint(f\"{a} + {b}  = {a + b}\")\nprint(f\"{a} - {b}  = {a - b}\")\nprint(f\"{a} * {b}  = {a * b}\")\nprint(f\"{a} / {b}  = {a / b}\")\nprint(f\"{a} // {b} = {a // b}\")\nprint(f\"{a} % {b}  = {a % b}\")\nprint(f\"{a} ** {b} = {a ** b}\")")
+      +out("17 + 5  = 22\n17 - 5  = 12\n17 * 5  = 85\n17 / 5  = 3.4\n17 // 5 = 3\n17 % 5  = 2\n17 ** 5 = 1419857")
+      +'<h2>Nota fiscal</h2>'
+      +codeBlock("nf.py","preco = 29.90\nqtd = 15\nfrete = 12.50\ndesc = 5\n\nsubtotal = preco * qtd\nvalor_desc = subtotal * (desc / 100)\ntotal = subtotal - valor_desc + frete\n\nprint(f\"Subtotal: R$ {subtotal:.2f}\")\nprint(f\"Desconto: R$ {valor_desc:.2f}\")\nprint(f\"Frete:    R$ {frete:.2f}\")\nprint(f\"Total:    R$ {total:.2f}\")")
+      +out("Subtotal: R$ 448.50\nDesconto: R$ 22.43\nFrete:    R$ 12.50\nTotal:    R$ 438.58")
+      +'</div>'
+    },
+    { label:"Relacionais", content:
+      '<div class="content-block"><h2>Operadores de comparacao</h2>'
+      +'<table class="content-table"><thead><tr><th>Op</th><th>Significado</th><th>Exemplo</th></tr></thead><tbody>'
+      +'<tr><td><code>==</code></td><td>Igual</td><td><code>5 == 5  True</code></td></tr>'
+      +'<tr><td><code>!=</code></td><td>Diferente</td><td><code>5 != 3  True</code></td></tr>'
+      +'<tr><td><code>&gt;</code></td><td>Maior</td><td><code>5 &gt; 3  True</code></td></tr>'
+      +'<tr><td><code>&lt;</code></td><td>Menor</td><td><code>5 &lt; 3  False</code></td></tr>'
+      +'<tr><td><code>&gt;=</code></td><td>Maior ou igual</td><td><code>5 &gt;= 5  True</code></td></tr>'
+      +'<tr><td><code>&lt;=</code></td><td>Menor ou igual</td><td><code>3 &lt;= 5  True</code></td></tr></tbody></table>'
+      +codeBlock("relac.py","nota = 7.5\nmedia = 6.0\nprint(f\"Aprovado: {nota >= media}\")\n\n# Comparacao encadeada (so Python!)\nidade = 25\nprint(18 <= idade <= 65)  # True\n\n# Strings (ordem alfabetica)\nprint(\"abacaxi\" < \"banana\")   # True\nprint(\"Python\" == \"python\")  # False (case-sensitive)")
+      +out("Aprovado: True\nTrue\nTrue\nFalse")
+      +'<h2>Classificacao de alunos</h2>'
+      +codeBlock("classif.py","alunos = [(\"Ana\", 9.2), (\"Bruno\", 6.0), (\"Carla\", 4.8), (\"Diego\", 7.5)]\n\nprint(f\"{'ALUNO':<10} {'NOTA':>5} {'STATUS':>12}\")\nprint(\"-\" * 30)\nfor nome, nota in alunos:\n    if nota >= 9:\n        st = \"Excelente\"\n    elif nota >= 7:\n        st = \"Bom\"\n    elif nota >= 6:\n        st = \"Suficiente\"\n    else:\n        st = \"Reprovado\"\n    print(f\"{nome:<10} {nota:>5.1f} {st:>12}\")")
+      +out("ALUNO       NOTA       STATUS\n------------------------------\nAna          9.2    Excelente\nBruno        6.0   Suficiente\nCarla        4.8    Reprovado\nDiego        7.5          Bom")
+      +'</div>'
+    },
+    { label:"Logicos", content:
+      '<div class="content-block"><h2>and, or, not</h2>'
+      +'<table class="content-table"><thead><tr><th>Op</th><th>Descricao</th><th>Exemplo</th></tr></thead><tbody>'
+      +'<tr><td><code>and</code></td><td>Ambos True</td><td><code>True and False = False</code></td></tr>'
+      +'<tr><td><code>or</code></td><td>Ao menos 1 True</td><td><code>True or False = True</code></td></tr>'
+      +'<tr><td><code>not</code></td><td>Inverte</td><td><code>not True = False</code></td></tr></tbody></table>'
+      +codeBlock("logicos.py","# Tabela verdade\nfor a in [True, False]:\n    for b in [True, False]:\n        print(f\"  {a!s:>5} and {b!s:<5} = {a and b!s:<5}  |  {a!s:>5} or {b!s:<5} = {a or b!s:<5}\")")
+      +out("   True and True  = True   |   True or True  = True\n   True and False = False  |   True or False = True\n  False and True  = False  |  False or True  = True\n  False and False = False  |  False or False = False")
+      +'<h2>Sistema de credito</h2>'
+      +codeBlock("credito.py","idade = 28\nrenda = 4500\nscore = 720\nrestricao = False\n\nidade_ok = 18 <= idade <= 70\nrenda_ok = renda >= 2000\nscore_ok = score >= 600\nsem_rest = not restricao\n\naprovado = idade_ok and renda_ok and score_ok and sem_rest\n\nprint(f\"Idade valida:    {idade_ok}\")\nprint(f\"Renda minima:    {renda_ok}\")\nprint(f\"Score bom:       {score_ok}\")\nprint(f\"Sem restricao:   {sem_rest}\")\nprint(f\"RESULTADO:       {'APROVADO' if aprovado else 'NEGADO'}\")")
+      +out("Idade valida:    True\nRenda minima:    True\nScore bom:       True\nSem restricao:   True\nRESULTADO:       APROVADO")
+      +'</div>'
+    },
+    { label:"Atribuicao", content:
+      '<div class="content-block"><h2>Operadores de atribuicao composta</h2>'
+      +'<table class="content-table"><thead><tr><th>Op</th><th>Equivale a</th><th>Exemplo</th></tr></thead><tbody>'
+      +'<tr><td><code>+=</code></td><td><code>x = x + n</code></td><td><code>x += 5</code></td></tr>'
+      +'<tr><td><code>-=</code></td><td><code>x = x - n</code></td><td><code>x -= 3</code></td></tr>'
+      +'<tr><td><code>*=</code></td><td><code>x = x * n</code></td><td><code>x *= 2</code></td></tr>'
+      +'<tr><td><code>/=</code></td><td><code>x = x / n</code></td><td><code>x /= 4</code></td></tr>'
+      +'<tr><td><code>//=</code></td><td><code>x = x // n</code></td><td><code>x //= 3</code></td></tr>'
+      +'<tr><td><code>%=</code></td><td><code>x = x % n</code></td><td><code>x %= 2</code></td></tr>'
+      +'<tr><td><code>**=</code></td><td><code>x = x ** n</code></td><td><code>x **= 3</code></td></tr></tbody></table>'
+      +codeBlock("atrib.py","x = 100\nprint(f\"Inicial: {x}\")\n\nx += 50\nprint(f\"+= 50:   {x}\")\n\nx -= 30\nprint(f\"-= 30:   {x}\")\n\nx *= 2\nprint(f\"*= 2:    {x}\")\n\nx //= 7\nprint(f\"//= 7:   {x}\")")
+      +out("Inicial: 100\n+= 50:   150\n-= 30:   120\n*= 2:    240\n//= 7:   34")
+      +'<h2>Conta bancaria</h2>'
+      +codeBlock("banco.py","saldo = 1000.00\nprint(f\"Saldo inicial: R$ {saldo:.2f}\")\n\nsaldo += 2500\nprint(f\"Deposito:      R$ {saldo:.2f}\")\n\nsaldo -= 450\nprint(f\"Saque:         R$ {saldo:.2f}\")\n\nsaldo *= 1.012  # rendimento 1.2%\nprint(f\"Rendimento:    R$ {saldo:.2f}\")\n\nsaldo -= 15.90  # taxa\nprint(f\"Taxa:          R$ {saldo:.2f}\")")
+      +out("Saldo inicial: R$ 1000.00\nDeposito:      R$ 3500.00\nSaque:         R$ 3050.00\nRendimento:    R$ 3086.60\nTaxa:          R$ 3070.70")
+      +'</div>'
+    }]
+  },
+
+  // 7 CONDICIONAIS
+  { id:"condicionais", title:"Condicionais", icon:"if", section:"Estruturas",
+    desc:"if, elif, else e match-case (Python 3.10+).",
+    tabs:[
+    { label:"if / elif / else", content:
+      '<div class="content-block"><h2>Estrutura condicional</h2>'
+      +codeBlock("if1.py","idade = 20\n\nif idade >= 18:\n    print(\"Maior de idade\")\nelse:\n    print(\"Menor de idade\")\n\n# Com elif\nnota = 7.5\nif nota >= 9:\n    conceito = \"A\"\nelif nota >= 7:\n    conceito = \"B\"\nelif nota >= 5:\n    conceito = \"C\"\nelse:\n    conceito = \"F\"\n\nprint(f\"Nota {nota} = Conceito {conceito}\")")
+      +out("Maior de idade\nNota 7.5 = Conceito B")
+      +'<h2>Operador ternario</h2>'
+      +codeBlock("tern.py","idade = 20\nstatus = \"maior\" if idade >= 18 else \"menor\"\nprint(f\"Status: {status} de idade\")\n\nnota = 7.0\nprint(\"Aprovado\" if nota >= 6 else \"Reprovado\")")
+      +out("Status: maior de idade\nAprovado")
+      +'<h2>Classificador de triangulos</h2>'
+      +codeBlock("triang.py","a, b, c = 5, 5, 8\n\nif a + b > c and a + c > b and b + c > a:\n    if a == b == c:\n        tipo = \"Equilatero\"\n    elif a == b or a == c or b == c:\n        tipo = \"Isoceles\"\n    else:\n        tipo = \"Escaleno\"\n    print(f\"Lados {a}, {b}, {c}: {tipo}\")\nelse:\n    print(\"Nao forma triangulo\")")
+      +out("Lados 5, 5, 8: Isoceles")
+      +'<h2>Calculadora de imposto</h2>'
+      +codeBlock("irpf.py","salario = 5500.00\n\nif salario <= 2259.20:\n    aliq, ded = 0, 0\nelif salario <= 2826.65:\n    aliq, ded = 7.5, 169.44\nelif salario <= 3751.05:\n    aliq, ded = 15, 381.44\nelif salario <= 4664.68:\n    aliq, ded = 22.5, 662.77\nelse:\n    aliq, ded = 27.5, 896.00\n\nimposto = max((salario * aliq / 100) - ded, 0)\nliquido = salario - imposto\n\nprint(f\"Bruto:   R$ {salario:,.2f}\")\nprint(f\"Aliquota:{aliq}%\")\nprint(f\"Imposto: R$ {imposto:,.2f}\")\nprint(f\"Liquido: R$ {liquido:,.2f}\")")
+      +out("Bruto:   R$ 5,500.00\nAliquota:27.5%\nImposto: R$ 616.50\nLiquido: R$ 4,883.50")
+      +'</div>'
+    },
+    { label:"match-case", content:
+      '<div class="content-block"><h2>match-case (Python 3.10+)</h2>'
+      +'<div class="warning-box"><strong>Requer Python 3.10 ou superior.</strong></div>'
+      +codeBlock("match1.py","comando = \"status\"\n\nmatch comando:\n    case \"iniciar\":\n        print(\"Sistema iniciado\")\n    case \"pausar\":\n        print(\"Sistema pausado\")\n    case \"status\":\n        print(\"Sistema operacional\")\n    case _:\n        print(f\"Comando desconhecido: {comando}\")")
+      +out("Sistema operacional")
+      +'<h2>Match com desestruturacao</h2>'
+      +codeBlock("match2.py","pontos = [(0, 0), (3, 0), (0, 5), (2, 7)]\n\nfor p in pontos:\n    match p:\n        case (0, 0):\n            print(f\"{p} -> Origem\")\n        case (x, 0):\n            print(f\"{p} -> Eixo X\")\n        case (0, y):\n            print(f\"{p} -> Eixo Y\")\n        case (x, y):\n            print(f\"{p} -> Ponto ({x},{y})\")")
+      +out("(0, 0) -> Origem\n(3, 0) -> Eixo X\n(0, 5) -> Eixo Y\n(2, 7) -> Ponto (2,7)")
+      +'</div>'
+    }]
+  },
+
+  // 8 STRINGS
+  { id:"strings", title:"Strings", icon:"\"\"", section:"Estruturas",
+    desc:"Acesso, fatiamento, operadores e metodos de string.",
+    tabs:[
+    { label:"Acesso e Fatiamento", content:
+      '<div class="content-block"><h2>Indices</h2>'
+      +codeBlock("idx.py","texto = \"Python\"\n# Indice:  0  1  2  3  4  5\n# Negat:  -6 -5 -4 -3 -2 -1\n\nprint(texto[0])    # P\nprint(texto[-1])   # n\nprint(len(texto))  # 6")
+      +out("P\nn\n6")
+      +'<h2>Fatiamento (slicing)</h2><p>Sintaxe: <span class="inline-code">string[inicio:fim:passo]</span></p>'
+      +codeBlock("slice.py","texto = \"Fundamentos de Python\"\n\nprint(texto[0:11])    # Fundamentos\nprint(texto[15:])     # Python\nprint(texto[::-1])    # nohtyP ed sotnemadnuF\n\narquivo = \"relatorio.pdf\"\next = arquivo[arquivo.rfind(\".\"):]\nprint(ext)  # .pdf")
+      +out("Fundamentos\nPython\nnohtyP ed sotnemadnuF\n.pdf")
+      +'<h2>Analisador de CPF</h2>'
+      +codeBlock("cpf.py","cpf = \"123.456.789-09\"\n\nbloco1 = cpf[0:3]\nbloco2 = cpf[4:7]\nbloco3 = cpf[8:11]\ndigitos = cpf[12:14]\n\ncpf_limpo = cpf.replace(\".\", \"\").replace(\"-\", \"\")\n\nprint(f\"CPF: {cpf}\")\nprint(f\"Blocos: {bloco1} | {bloco2} | {bloco3} | {digitos}\")\nprint(f\"Numeros: {cpf_limpo}\")\nprint(f\"Valido: {cpf_limpo.isdigit() and len(cpf_limpo) == 11}\")")
+      +out("CPF: 123.456.789-09\nBlocos: 123 | 456 | 789 | 09\nNumeros: 12345678909\nValido: True")
+      +'</div>'
+    },
+    { label:"Operadores", content:
+      '<div class="content-block"><h2>Operadores com strings</h2>'
+      +codeBlock("str_op.py","# Concatenacao (+)\nnome = \"Maria\" + \" \" + \"Santos\"\nprint(nome)\n\n# Repeticao (*)\nprint(\"-\" * 30)\n\n# Pertinencia (in)\nemail = \"user@empresa.com\"\nprint(\"@\" in email)          # True\nprint(\"gmail\" not in email)  # True\n\n# Comparacao\nprint(\"Python\" == \"python\")  # False\nprint(\"abc\" < \"abd\")        # True")
+      +out("Maria Santos\n------------------------------\nTrue\nTrue\nFalse\nTrue")
+      +'<h2>Validador de email</h2>'
+      +codeBlock("email.py","def validar(email):\n    erros = []\n    if \" \" in email:\n        erros.append(\"Espacos nao permitidos\")\n    if \"@\" not in email:\n        erros.append(\"Falta @\")\n    if \".\" not in email:\n        erros.append(\"Falta ponto\")\n    if email.count(\"@\") > 1:\n        erros.append(\"Mais de um @\")\n    return erros\n\ntestes = [\"ana@empresa.com\", \"invalido\", \"dois@@x.com\"]\nfor e in testes:\n    r = validar(e)\n    print(f\"  {e:<20} {'OK' if not r else ', '.join(r)}\")")
+      +out("  ana@empresa.com      OK\n  invalido              Falta @\n  dois@@x.com           Mais de um @")
+      +'</div>'
+    },
+    { label:"Metodos", content:
+      '<div class="content-block"><h2>Metodos essenciais</h2>'
+      +codeBlock("metodos.py","texto = \"  Python e incrivel  \"\n\n# Case\nprint(texto.upper())       # PYTHON E INCRIVEL\nprint(texto.lower())       # python e incrivel\nprint(texto.title())       # Python E Incrivel\n\n# Espacos\nprint(texto.strip())       # sem espacos nas bordas\n\n# Busca\nfrase = \"O gato subiu no telhado\"\nprint(frase.find(\"gato\"))       # 2\nprint(frase.count(\"o\"))         # 3\nprint(frase.replace(\"gato\", \"cachorro\"))\n\n# Split e Join\ncsv = \"nome,idade,cidade\"\nprint(csv.split(\",\"))           # ['nome','idade','cidade']\n\npalvs = [\"Python\", \"e\", \"top\"]\nprint(\" \".join(palvs))          # Python e top\n\n# Verificacoes\nprint(\"123\".isdigit())     # True\nprint(\"abc\".isalpha())     # True\nprint(\"abc1\".isalnum())    # True")
+      +out("  PYTHON E INCRIVEL  \n  python e incrivel  \n  Python E Incrivel  \nPython e incrivel\n2\n3\nO cachorro subiu no telhado\n['nome', 'idade', 'cidade']\nPython e top\nTrue\nTrue\nTrue")
+      +'<h2>Limpador de dados</h2>'
+      +codeBlock("limpar.py","def limpar_nome(raw):\n    nome = raw.strip()\n    nome = \" \".join(nome.split())  # remove espacos duplos\n    return nome.title()\n\ndef limpar_tel(raw):\n    return \"\".join(c for c in raw if c.isdigit())\n\ndados = [\n    (\"  maria   silva  \", \"(11) 98765-4321\"),\n    (\"JOAO   PEDRO\", \"11 91234 5678\"),\n]\n\nfor nome_r, tel_r in dados:\n    print(f\"{limpar_nome(nome_r):<20} {limpar_tel(tel_r)}\")")
+      +out("Maria Silva          11987654321\nJoao Pedro           11912345678")
+      +'</div>'
+    }]
+  },
+
+  // 9 FORMATACAO DE STRINGS
+  { id:"formatacao-strings", title:"Formatacao de Strings", icon:"f\"", section:"Estruturas",
+    desc:"f-strings, operador % e format().",
+    tabs:[
+    { label:"f-strings", content:
+      '<div class="content-block"><h2>f-strings (Python 3.6+)</h2>'
+      +codeBlock("fstr.py","nome = \"Carlos\"\nidade = 30\nsal = 5432.10\n\nprint(f\"Nome: {nome}, Idade: {idade}\")\nprint(f\"Nascimento: {2024 - idade}\")\nprint(f\"Salario: R$ {sal:,.2f}\")\nprint(f\"Percentual: {0.156:.1%}\")")
+      +out("Nome: Carlos, Idade: 30\nNascimento: 1994\nSalario: R$ 5,432.10\nPercentual: 15.6%")
+      +'<h3>Especificadores</h3>'
+      +'<table class="content-table"><thead><tr><th>Formato</th><th>Descricao</th><th>Exemplo</th></tr></thead><tbody>'
+      +'<tr><td><code>:.2f</code></td><td>2 casas decimais</td><td><code>3.14</code></td></tr>'
+      +'<tr><td><code>:,</code></td><td>Separador milhares</td><td><code>1,000,000</code></td></tr>'
+      +'<tr><td><code>:.1%</code></td><td>Percentual</td><td><code>85.0%</code></td></tr>'
+      +'<tr><td><code>:>10</code></td><td>Alinhar direita</td><td><code>       abc</code></td></tr>'
+      +'<tr><td><code>:<10</code></td><td>Alinhar esquerda</td><td><code>abc       </code></td></tr>'
+      +'<tr><td><code>:05d</code></td><td>Zeros a esquerda</td><td><code>00042</code></td></tr></tbody></table>'
+      +'<h2>Relatorio de vendas</h2>'
+      +codeBlock("vendas.py","vendas = [\n    (\"Notebook\", 3, 4599.90),\n    (\"Mouse\", 25, 89.90),\n    (\"Teclado\", 12, 349.90),\n]\n\nprint(f\"{'PRODUTO':<15} {'QTD':>5} {'TOTAL':>12}\")\nprint(\"=\" * 34)\ntotal_g = 0\nfor prod, qtd, preco in vendas:\n    t = qtd * preco\n    total_g += t\n    print(f\"{prod:<15} {qtd:>5} {t:>12,.2f}\")\nprint(\"=\" * 34)\nprint(f\"{'TOTAL':>22} {total_g:>12,.2f}\")")
+      +out("PRODUTO           QTD        TOTAL\n==================================\nNotebook            3    13,799.70\nMouse              25     2,247.50\nTeclado            12     4,198.80\n==================================\n                 TOTAL    20,246.00")
+      +'</div>'
+    },
+    { label:"% e format()", content:
+      '<div class="content-block"><h2>Operador % (estilo C)</h2>'
+      +codeBlock("pct.py","nome = \"Ana\"\nidade = 25\naltura = 1.68\n\nprint(\"Nome: %s, Idade: %d\" % (nome, idade))\nprint(\"Altura: %.2f metros\" % altura)\nprint(\"Codigo: %05d\" % 42)")
+      +out("Nome: Ana, Idade: 25\nAltura: 1.68 metros\nCodigo: 00042")
+      +'<h2>Metodo format()</h2>'
+      +codeBlock("fmt.py","print(\"Eu sou {} e tenho {} anos\".format(\"Pedro\", 28))\nprint(\"{0} nota {1}. Parabens, {0}!\".format(\"Julia\", 9.5))\nprint(\"{nome} - {cargo}\".format(nome=\"Rafael\", cargo=\"Dev\"))\nprint(\"Valor: R$ {:,.2f}\".format(12500.5))")
+      +out("Eu sou Pedro e tenho 28 anos\nJulia nota 9.5. Parabens, Julia!\nRafael - Dev\nValor: R$ 12,500.50")
+      +'<h2>Comparacao dos 3 metodos</h2>'
+      +codeBlock("comp3.py","nome = \"Maria\"\nsaldo = 15420.50\n\n# f-string (RECOMENDADO)\nprint(f\"{nome}, saldo: R$ {saldo:,.2f}\")\n\n# format()\nprint(\"{}, saldo: R$ {:,.2f}\".format(nome, saldo))\n\n# % (legado)\nprint(\"%s, saldo: R$ %.2f\" % (nome, saldo))")
+      +out("Maria, saldo: R$ 15,420.50\nMaria, saldo: R$ 15,420.50\nMaria, saldo: R$ 15,420.50")
+      +'<div class="info-box"><strong>Use f-strings como padrao.</strong> Mais legiveis e rapidas.</div></div>'
+    }]
+  },
+
+  // 10 COMENTARIOS
+  { id:"comentarios", title:"Comentarios", icon:"#", section:"Boas Praticas",
+    desc:"Como e quando usar comentarios em Python.",
+    tabs:[
+    { label:"Tipos", content:
+      '<div class="content-block"><h2>Comentario de linha (#)</h2>'
+      +codeBlock("com1.py","# Isto e um comentario\nnome = \"Python\"  # comentario inline\n\n# Multiplas linhas:\n# basta usar # em cada\n# linha do bloco")
+      +'<h2>Docstrings</h2>'
+      +codeBlock("doc.py","def calcular_imc(peso, altura):\n    \"\"\"\n    Calcula o IMC (Indice de Massa Corporal).\n\n    Args:\n        peso: Peso em kg (float)\n        altura: Altura em metros (float)\n\n    Returns:\n        Valor do IMC como float\n    \"\"\"\n    return peso / (altura ** 2)\n\n# Acessivel em runtime\nprint(calcular_imc.__doc__)")
+      +'<h2>Bloco de texto</h2>'
+      +codeBlock("bloco.py","\"\"\"\nEste bloco funciona como comentario\nde multiplas linhas. Tecnicamente e\numa string que o Python descarta.\n\"\"\"\n\nprint(\"Apenas esta linha executa\")")
+      +out("Apenas esta linha executa")
+      +'</div>'
+    },
+    { label:"Boas Praticas", content:
+      '<div class="content-block"><h2>Bons comentarios (explique o PORQUE)</h2>'
+      +codeBlock("bom.py","# Timeout de 30s porque o servico de geocodificacao\n# demora em horarios de pico (08h-10h)\nGEOCODING_TIMEOUT = 30\n\n# Workaround para bug na API v2.3 (ticket #4521)\ndata = normalizar_data(resp[\"created_at\"])\n\n# Cache desabilitado em dev para depuracao\nif DEBUG:\n    cache.clear()")
+      +'<h2>Comentarios ruins (obvios)</h2>'
+      +codeBlock("ruim.py","# EVITE:\ni += 1          # incrementa i\nnome = \"Maria\"  # define nome como Maria\nreturn resultado  # retorna resultado\n\n# PREFIRA codigo claro:\nqtd_tentativas += 1\nnome_cliente = \"Maria\"\nreturn saldo_atualizado")
+      +'<h2>Projeto bem comentado</h2>'
+      +codeBlock("projeto.py","# Tolerancia para comparacao de floats.\n# Comparacao direta (==) causa falsos negativos\n# devido a erros de ponto flutuante (IEEE 754).\nEPSILON = 1e-9\n\ndef media_ponderada(notas, pesos):\n    \"\"\"Calcula media ponderada de notas.\"\"\"\n    soma_pesos = sum(pesos)\n    \n    # Prevenir divisao por zero\n    if abs(soma_pesos) < EPSILON:\n        return 0.0\n    \n    return sum(n * p for n, p in zip(notas, pesos)) / soma_pesos\n\nnotas = [8.0, 7.5, 9.0]\npesos = [3, 3, 4]\nprint(f\"Media: {media_ponderada(notas, pesos):.2f}\")")
+      +out("Media: 8.25")
+      +'<div class="warning-box"><strong>Regra:</strong> Se precisa de comentario para explicar <em>o que</em> faz, reescreva o codigo. Comentarios devem explicar <em>por que</em>.</div></div>'
+    }]
+  },
+
+  // 11 TIPOS DE ERRO
+  { id:"tipos-erro", title:"Tipos de Erro", icon:"!!", section:"Boas Praticas",
+    desc:"Erros de sintaxe vs logica e como corrigir cada um.",
+    tabs:[
+    { label:"Sintaxe", content:
+      '<div class="content-block"><h2>SyntaxError (antes da execucao)</h2>'
+      +codeBlock("sint.py","# ERRO: falta dois-pontos\n# if idade > 18\n#     print(\"Maior\")\n# CORRECAO:\nidade = 20\nif idade > 18:\n    print(\"Maior de idade\")\n\n# ERRO: parentese nao fechado\n# resultado = (10 + 5 * (3 - 1)\n# CORRECAO:\nresultado = (10 + 5 * (3 - 1))\nprint(resultado)\n\n# ERRO: indentacao errada\n# def ola():\n# print(\"Oi\")\n# CORRECAO:\ndef ola():\n    print(\"Oi\")\n\nola()")
+      +out("Maior de idade\n20\nOi")
+      +'<h2>Como ler traceback</h2>'
+      +codeBlock("trace.py","# O Python mostra:\n#\n#   File \"app.py\", line 3\n#     if idade > 18\n#                  ^\n#   SyntaxError: expected \':\'\n#\n# Leia de BAIXO para CIMA:\n# 1. Tipo do erro + mensagem\n# 2. Linha e posicao exata\n# 3. Pilha de chamadas\n\nprint(\"Sempre leia o traceback!\")")
+      +out("Sempre leia o traceback!")
+      +'</div>'
+    },
+    { label:"Logica", content:
+      '<div class="content-block"><h2>Erros de logica (roda mas da errado)</h2>'
+      +codeBlock("log1.py","# ERRO: precedencia de operadores\nn1, n2, n3 = 8.0, 7.5, 9.0\n\nmedia_errada = n1 + n2 / 3\nprint(f\"Errada: {media_errada}\")   # 10.5\n\nmedia_certa = (n1 + n2 + n3) / 3\nprint(f\"Correta: {media_certa:.2f}\")  # 8.17")
+      +out("Errada: 10.5\nCorreta: 8.17")
+      +codeBlock("log2.py","# ERRO: condicao invertida\ntemp = 38.5\n\n# ERRADO:\nif temp > 37.5:\n    print(\"Normal\")    # imprime Normal pra febre!\n\n# CORRETO:\nif temp > 37.5:\n    print(\"Febre!\")\nelse:\n    print(\"Normal\")")
+      +out("Normal\nFebre!")
+      +'<h2>Erros comuns em runtime</h2>'
+      +'<table class="content-table"><thead><tr><th>Erro</th><th>Causa</th><th>Exemplo</th></tr></thead><tbody>'
+      +'<tr><td><code>TypeError</code></td><td>Tipos incompativeis</td><td><code>"10" + 5</code></td></tr>'
+      +'<tr><td><code>ValueError</code></td><td>Valor invalido</td><td><code>int("abc")</code></td></tr>'
+      +'<tr><td><code>NameError</code></td><td>Variavel nao existe</td><td><code>print(x)</code></td></tr>'
+      +'<tr><td><code>ZeroDivisionError</code></td><td>Divisao por zero</td><td><code>10/0</code></td></tr>'
+      +'<tr><td><code>IndexError</code></td><td>Indice invalido</td><td><code>[1,2][5]</code></td></tr></tbody></table>'
+      +codeBlock("corrigir.py","# Como corrigir cada um:\n\n# TypeError\nprint(int(\"10\") + 5)  # 15\n\n# ValueError\nentrada = \"abc\"\nif entrada.isdigit():\n    print(int(entrada))\nelse:\n    print(f\"'{entrada}' nao e numero\")\n\n# ZeroDivisionError\ndivisor = 0\nif divisor != 0:\n    print(10 / divisor)\nelse:\n    print(\"Divisao por zero!\")\n\n# IndexError\nlista = [1, 2, 3]\nidx = 5\nif idx < len(lista):\n    print(lista[idx])\nelse:\n    print(f\"Indice {idx} fora do alcance\")")
+      +out("15\n'abc' nao e numero\nDivisao por zero!\nIndice 5 fora do alcance")
+      +'</div>'
+    },
+    { label:"try/except", content:
+      '<div class="content-block"><h2>Tratamento de excecoes</h2>'
+      +codeBlock("try1.py","try:\n    numero = int(\"abc\")\nexcept ValueError:\n    print(\"Nao e um numero valido!\")\n\ntry:\n    resultado = 100 / 0\nexcept ZeroDivisionError:\n    print(\"Divisao por zero!\")\nfinally:\n    print(\"Executou o finally\")")
+      +out("Nao e um numero valido!\nDivisao por zero!\nExecutou o finally")
+      +'<h2>Entrada segura (com loop)</h2>'
+      +codeBlock("segura.py","def ler_inteiro(msg):\n    while True:\n        try:\n            return int(input(msg))\n        except ValueError:\n            print(\"  Invalido! Digite um inteiro.\")\n\ndef ler_float(msg):\n    while True:\n        try:\n            return float(input(msg))\n        except ValueError:\n            print(\"  Invalido! Digite um numero.\")\n\n# Uso:\n# idade = ler_inteiro(\"Idade: \")\n# peso = ler_float(\"Peso: \")\nprint(\"Funcoes de leitura segura prontas!\")")
+      +out("Funcoes de leitura segura prontas!")
+      +'<h2>Calculadora robusta</h2>'
+      +codeBlock("calc.py","def calcular(expr):\n    try:\n        partes = expr.split()\n        a = float(partes[0])\n        op = partes[1]\n        b = float(partes[2])\n\n        if op == \"+\": return a + b\n        elif op == \"-\": return a - b\n        elif op == \"*\": return a * b\n        elif op == \"/\": return a / b\n        else: return f\"Operador '{op}' invalido\"\n    except (ValueError, IndexError):\n        return \"Formato invalido. Use: num op num\"\n    except ZeroDivisionError:\n        return \"Divisao por zero!\"\n\ntestes = [\"10 + 5\", \"20 / 0\", \"abc\", \"8 * 3\"]\nfor t in testes:\n    print(f\"  {t:<10} = {calcular(t)}\")")
+      +out("  10 + 5     = 15.0\n  20 / 0     = Divisao por zero!\n  abc        = Formato invalido. Use: num op num\n  8 * 3      = 24.0")
+      +'</div>'
+    }]
+  },
+
+  // 12 BIBLIOTECA MATH
+  { id:"math", title:"Biblioteca math", icon:"fx", section:"Bibliotecas",
+    desc:"Funcoes matematicas do modulo math.",
+    tabs:[
+    { label:"Basico", content:
+      '<div class="content-block"><h2>Importando e constantes</h2>'
+      +codeBlock("math1.py","import math\n\nprint(f\"pi  = {math.pi}\")\nprint(f\"e   = {math.e}\")\nprint(f\"inf = {math.inf}\")")
+      +out("pi  = 3.141592653589793\ne   = 2.718281828459045\ninf = inf")
+      +'<h2>Arredondamento</h2>'
+      +codeBlock("math2.py","import math\n\nv = 4.7\nprint(f\"ceil({v})  = {math.ceil(v)}\")    # 5\nprint(f\"floor({v}) = {math.floor(v)}\")   # 4\nprint(f\"trunc({v}) = {math.trunc(v)}\")   # 4\nprint(f\"round({v}) = {round(v)}\")         # 5")
+      +out("ceil(4.7)  = 5\nfloor(4.7) = 4\ntrunc(4.7) = 4\nround(4.7) = 5")
+      +'<h2>Raiz, potencia e log</h2>'
+      +codeBlock("math3.py","import math\n\nprint(f\"sqrt(144)    = {math.sqrt(144)}\")\nprint(f\"pow(2, 10)   = {math.pow(2, 10)}\")\nprint(f\"log(100, 10) = {math.log(100, 10)}\")\nprint(f\"log2(256)    = {math.log2(256)}\")\nprint(f\"factorial(6) = {math.factorial(6)}\")")
+      +out("sqrt(144)    = 12.0\npow(2, 10)   = 1024.0\nlog(100, 10) = 2.0\nlog2(256)    = 8.0\nfactorial(6) = 720")
+      +'</div>'
+    },
+    { label:"Exemplos", content:
+      '<div class="content-block"><h2>Trigonometria</h2>'
+      +codeBlock("trig.py","import math\n\nprint(f\"{'GRAUS':>6} {'SIN':>8} {'COS':>8}\")\nprint(\"-\" * 24)\nfor g in [0, 30, 45, 60, 90]:\n    r = math.radians(g)\n    print(f\"{g:>6} {math.sin(r):>8.4f} {math.cos(r):>8.4f}\")")
+      +out(" GRAUS      SIN      COS\n------------------------\n     0   0.0000   1.0000\n    30   0.5000   0.8660\n    45   0.7071   0.7071\n    60   0.8660   0.5000\n    90   1.0000   0.0000")
+      +'<h2>Geometria pratica</h2>'
+      +codeBlock("geom.py","import math\n\n# Distancia entre pontos\np1, p2 = (3, 4), (7, 1)\nd = math.dist(p1, p2)\nprint(f\"Distancia: {d:.2f}\")\n\n# Area do circulo\nraio = 5\narea = math.pi * raio ** 2\nprint(f\"Area (r={raio}): {area:.2f}\")\n\n# Hipotenusa\nhip = math.hypot(3, 4)\nprint(f\"Hipotenusa: {hip:.2f}\")")
+      +out("Distancia: 5.00\nArea (r=5): 78.54\nHipotenusa: 5.00")
+      +'<h2>Combinatoria</h2>'
+      +codeBlock("comb.py","import math\n\nprint(f\"5!      = {math.factorial(5)}\")\nprint(f\"C(10,3) = {math.comb(10, 3)}\")\nprint(f\"P(5,2)  = {math.perm(5, 2)}\")")
+      +out("5!      = 120\nC(10,3) = 120\nP(5,2)  = 20")
+      +'</div>'
+    }]
+  },
+
+  // 13 COMPARACAO COM PRINTF
+  { id:"printf", title:"Comparacao com printf", icon:"C>", section:"Bibliotecas",
+    desc:"Equivalencias entre printf (C) e print (Python).",
+    tabs:[
+    { label:"Tabela", content:
+      '<div class="content-block"><h2>printf (C) vs f-string (Python)</h2>'
+      +'<table class="content-table"><thead><tr><th>C (printf)</th><th>Python (f-string)</th><th>Descricao</th></tr></thead><tbody>'
+      +'<tr><td><code>%d</code></td><td><code>{val:d}</code></td><td>Inteiro</td></tr>'
+      +'<tr><td><code>%f</code></td><td><code>{val:f}</code></td><td>Float</td></tr>'
+      +'<tr><td><code>%.2f</code></td><td><code>{val:.2f}</code></td><td>2 casas decimais</td></tr>'
+      +'<tr><td><code>%s</code></td><td><code>{val}</code></td><td>String</td></tr>'
+      +'<tr><td><code>%x</code></td><td><code>{val:x}</code></td><td>Hexadecimal</td></tr>'
+      +'<tr><td><code>%o</code></td><td><code>{val:o}</code></td><td>Octal</td></tr>'
+      +'<tr><td><code>%e</code></td><td><code>{val:e}</code></td><td>Cientifica</td></tr>'
+      +'<tr><td><code>%10d</code></td><td><code>{val:10d}</code></td><td>Largura 10</td></tr>'
+      +'<tr><td><code>%-10s</code></td><td><code>{val:&lt;10}</code></td><td>Alinhado esquerda</td></tr>'
+      +'<tr><td><code>%05d</code></td><td><code>{val:05d}</code></td><td>Zeros a esquerda</td></tr></tbody></table>'
+      +'<div class="info-box"><strong>Diferenca:</strong> Em C, <code>printf</code> nao quebra linha (precisa <code>\\n</code>). Em Python, <code>print()</code> quebra automaticamente.</div>'
+      +codeBlock("equiv.py","v = 42\nf = 3.14159\n\nprint(f\"Inteiro:    {v:d}\")\nprint(f\"Float:      {f:.2f}\")\nprint(f\"Hex:        {255:x}\")\nprint(f\"Octal:      {255:o}\")\nprint(f\"Cientifico: {f:e}\")\nprint(f\"Largura 10: [{v:10d}]\")\nprint(f\"Esquerda:   [{'abc':<10}]\")\nprint(f\"Com zeros:  {v:05d}\")")
+      +out("Inteiro:    42\nFloat:      3.14\nHex:        ff\nOctal:      377\nCientifico: 3.141590e+00\nLargura 10: [        42]\nEsquerda:   [abc       ]\nCom zeros:  00042")
+      +'</div>'
+    },
+    { label:"Exemplos", content:
+      '<div class="content-block"><h2>C vs Python lado a lado</h2>'
+      +codeBlock("c_ex.c","// Em C:\nprintf(\"Nome: %s, Idade: %d\\n\", \"Carlos\", 30);\nprintf(\"Preco: R$ %.2f\\n\", 49.90);")
+      +codeBlock("py_ex.py","# Em Python:\nprint(f\"Nome: {'Carlos'}, Idade: {30}\")\nprint(f\"Preco: R$ {49.90:.2f}\")")
+      +out("Nome: Carlos, Idade: 30\nPreco: R$ 49.90")
+      +'<h2>Tabela formatada</h2>'
+      +codeBlock("tab_py.py","produtos = [\n    (\"Notebook\", 3, 4599.90),\n    (\"Mouse\", 10, 89.90),\n    (\"Teclado\", 5, 249.90),\n]\n\nprint(f\"{'Produto':<15} {'Qtd':>5} {'Preco':>8}\")\nprint(\"-\" * 30)\nfor nome, qtd, preco in produtos:\n    print(f\"{nome:<15} {qtd:>5} {preco:>8.2f}\")")
+      +out("Produto           Qtd    Preco\n------------------------------\nNotebook            3  4599.90\nMouse              10    89.90\nTeclado             5   249.90")
+      +'<h2>Operador % (mais proximo de printf)</h2>'
+      +codeBlock("legacy.py","nome = \"Ana\"\nidade = 25\n\nprint(\"Nome: %s, Idade: %d\" % (nome, idade))\nprint(\"Codigo: %05d\" % 42)\nprint(\"Hex: %x | Oct: %o\" % (255, 255))\n\n# Os 3 metodos Python:\npreco = 1299.90\nprint(f\"f-string: R$ {preco:.2f}\")\nprint(\"format:   R$ {:.2f}\".format(preco))\nprint(\"%%:       R$ %.2f\" % preco)")
+      +out("Nome: Ana, Idade: 25\nCodigo: 00042\nHex: ff | Oct: 377\nf-string: R$ 1299.90\nformat:   R$ 1299.90\n%:       R$ 1299.90")
+      +'<div class="info-box"><strong>Resumo:</strong> Se vem de C, o operador <code>%</code> sera familiar. Mas em Python moderno, use <strong>f-strings</strong>.</div></div>'
+    }]
+  }
+
+  ]; // fim TOPICS
+
+  /* ==========================================================
+     DOM
+     ========================================================== */
+  var sidebar     = document.getElementById("sidebar");
+  var sidebarNav  = document.getElementById("sidebar-nav");
+  var overlay     = document.getElementById("sidebar-overlay");
+  var closeBtn    = document.getElementById("sidebar-close");
+  var menuBtn     = document.getElementById("menu-toggle");
+  var searchIn    = document.getElementById("search-input");
+  var bcCurrent   = document.getElementById("breadcrumb-current");
+  var welcomeScr  = document.getElementById("welcome-screen");
+  var topicView   = document.getElementById("topic-view");
+  var tTitle      = document.getElementById("topic-title");
+  var tDesc       = document.getElementById("topic-desc");
+  var tTabs       = document.getElementById("topic-tabs");
+  var tContent    = document.getElementById("topic-content");
+  var btnStart    = document.getElementById("btn-start");
+  var btnPrev     = document.getElementById("btn-prev");
+  var btnNext     = document.getElementById("btn-next");
+  var btnTop      = document.getElementById("btn-scroll-top");
+  var toastEl     = document.getElementById("toast");
+  var mainEl      = document.getElementById("main");
+  var curIdx      = -1;
+
+  /* ==========================================================
+     BUILD NAV
+     ========================================================== */
+  function buildNav() {
+    var sec = "", h = "";
+    for (var i = 0; i < TOPICS.length; i++) {
+      var t = TOPICS[i];
+      if (t.section !== sec) { sec = t.section; h += '<div class="nav-section"><span class="nav-section-label">'+sec+'</span></div>'; }
+      h += '<div class="nav-item" data-index="'+i+'" data-search="'+t.title.toLowerCase()+'">'
+        +'<span class="nav-item-icon">'+t.icon+'</span><span class="nav-item-text">'+t.title+'</span></div>';
+    }
+    sidebarNav.innerHTML = h;
+  }
+
+  /* ==========================================================
+     LOAD TOPIC
+     ========================================================== */
+  function loadTopic(idx) {
+    if (idx < 0 || idx >= TOPICS.length) return;
+    var t = TOPICS[idx]; curIdx = idx;
+    welcomeScr.classList.remove("active");
+    topicView.classList.remove("active");
+    void topicView.offsetHeight;
+    topicView.classList.add("active");
+    tTitle.textContent = t.title;
+    tDesc.textContent = t.desc;
+    bcCurrent.textContent = t.title;
+    var tabH = "", conH = "";
+    for (var i = 0; i < t.tabs.length; i++) {
+      tabH += '<button class="tab-btn'+(i===0?' active':'')+'" data-tab="'+i+'">'+t.tabs[i].label+'</button>';
+      conH += '<div class="tab-panel'+(i===0?' active':'')+'" data-panel="'+i+'">'+t.tabs[i].content+'</div>';
+    }
+    tTabs.innerHTML = tabH;
+    tContent.innerHTML = conH;
+    document.querySelectorAll(".nav-item").forEach(function(el){ el.classList.toggle("active", parseInt(el.dataset.index)===idx); });
+    btnPrev.disabled = idx===0;
+    btnNext.disabled = idx===TOPICS.length-1;
+    mainEl.scrollTo({top:0,behavior:"smooth"});
+    closeSidebar();
+    bindCopy();
+  }
+
+  /* ==========================================================
+     TABS
+     ========================================================== */
+  tTabs.addEventListener("click", function(e) {
+    var b = e.target.closest(".tab-btn"); if(!b)return;
+    var ti = b.dataset.tab;
+    tTabs.querySelectorAll(".tab-btn").forEach(function(x){x.classList.remove("active");});
+    b.classList.add("active");
+    tContent.querySelectorAll(".tab-panel").forEach(function(x){x.classList.remove("active");});
+    tContent.querySelector('[data-panel="'+ti+'"]').classList.add("active");
+    bindCopy();
+  });
+
+  /* ==========================================================
+     COPY
+     ========================================================== */
+  function bindCopy() {
+    document.querySelectorAll(".code-copy-btn").forEach(function(btn){
+      var nb = btn.cloneNode(true); btn.parentNode.replaceChild(nb, btn);
+      nb.addEventListener("click", function(){
+        var raw = decodeURIComponent(nb.dataset.code);
+        navigator.clipboard.writeText(raw).then(function(){
+          nb.textContent="Copiado!"; nb.classList.add("copied"); showToast("Codigo copiado!");
+          setTimeout(function(){nb.textContent="Copiar";nb.classList.remove("copied");},2000);
+        }).catch(function(){
+          var ta=document.createElement("textarea");ta.value=raw;document.body.appendChild(ta);ta.select();document.execCommand("copy");document.body.removeChild(ta);
+          nb.textContent="Copiado!";nb.classList.add("copied");showToast("Copiado!");
+          setTimeout(function(){nb.textContent="Copiar";nb.classList.remove("copied");},2000);
+        });
+      });
+    });
+  }
+
+  /* ==========================================================
+     TOAST
+     ========================================================== */
+  var toastT;
+  function showToast(msg){ toastEl.textContent=msg; toastEl.classList.add("visible"); clearTimeout(toastT); toastT=setTimeout(function(){toastEl.classList.remove("visible");},2500); }
+
+  /* ==========================================================
+     SIDEBAR MOBILE
+     ========================================================== */
+  function openSidebar(){ sidebar.classList.add("open"); overlay.classList.add("visible"); }
+  function closeSidebar(){ sidebar.classList.remove("open"); overlay.classList.remove("visible"); }
+  menuBtn.addEventListener("click", openSidebar);
+  closeBtn.addEventListener("click", closeSidebar);
+  overlay.addEventListener("click", closeSidebar);
+
+  /* ==========================================================
+     SEARCH
+     ========================================================== */
+  searchIn.addEventListener("input", function(e){
+    var q = e.target.value.toLowerCase().trim();
+    document.querySelectorAll(".nav-item").forEach(function(it){ it.classList.toggle("hidden", !it.dataset.search.includes(q)); });
+  });
+
+  /* ==========================================================
+     NAV / BUTTONS
+     ========================================================== */
+  sidebarNav.addEventListener("click", function(e){ var it=e.target.closest(".nav-item"); if(it) loadTopic(parseInt(it.dataset.index)); });
+  btnPrev.addEventListener("click", function(){ if(curIdx>0)loadTopic(curIdx-1); });
+  btnNext.addEventListener("click", function(){ if(curIdx<TOPICS.length-1)loadTopic(curIdx+1); });
+  btnStart.addEventListener("click", function(){ loadTopic(0); });
+  btnTop.addEventListener("click", function(){ mainEl.scrollTo({top:0,behavior:"smooth"}); });
+
+  /* ==========================================================
+     KEYBOARD
+     ========================================================== */
+  document.addEventListener("keydown", function(e){
+    if(document.activeElement===searchIn) return;
+    if(e.key==="ArrowLeft"&&curIdx>0) loadTopic(curIdx-1);
+    else if(e.key==="ArrowRight"&&curIdx<TOPICS.length-1) loadTopic(curIdx+1);
+    else if(e.key==="/"||e.ctrlKey&&e.key==="k"){e.preventDefault();searchIn.focus();}
+    else if(e.key==="Escape"){searchIn.blur();closeSidebar();}
+  });
+
+  /* ==========================================================
+     INIT
+     ========================================================== */
+  buildNav();
+  var hash = window.location.hash.slice(1);
+  if(hash){ var fi=TOPICS.findIndex(function(t){return t.id===hash;}); if(fi!==-1) loadTopic(fi); }
+
+})();
+</script>
+
+</body>
+</html>
